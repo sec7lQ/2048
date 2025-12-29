@@ -277,6 +277,7 @@
 
     let grid = createEmpty();
     let score = 0;
+    let hasPlayedCurrentGame = false;
     let bestBySize = loadBestBySize();
     let best = bestBySize[gridSize] || 0;
     let isAnimating = false;
@@ -323,6 +324,7 @@
       if (gameStartTime) {
         finishTimerAndRecord();
       }
+      hasPlayedCurrentGame = false;
       grid = createEmpty();
       score = 0;
       overlay.classList.add('hidden');
@@ -451,6 +453,7 @@
       });
 
       if (moved) {
+        hasPlayedCurrentGame = true;
         addRandomTile();
         render(previous);
         checkEnd();
@@ -596,6 +599,12 @@
         512: { bg: '#edc850', fg: '#f9f6f2' },
         1024: { bg: '#edc53f', fg: '#f9f6f2' },
         2048: { bg: '#edc22e', fg: '#f9f6f2' },
+        4096: { bg: '#3c3a32', fg: '#f9f6f2' },
+        8192: { bg: '#3b332a', fg: '#f9f6f2' },
+        16384: { bg: '#3a2f26', fg: '#f9f6f2' },
+        32768: { bg: '#392b22', fg: '#f9f6f2' },
+        65536: { bg: '#38271e', fg: '#f9f6f2' },
+        131072: { bg: '#37231a', fg: '#f9f6f2' },
       };
       return map[value] || { bg: '#3c3a32', fg: '#f9f6f2' };
     }
@@ -645,8 +654,8 @@
     function finishTimerAndRecord() {
       if (!gameStartTime) return;
       const elapsedSec = Math.floor((Date.now() - gameStartTime) / 1000);
-      // 没有实际进行的对局不记入历史
-      if (score <= 0 && elapsedSec < 1) {
+      // 没有实际操作（没有发生过移动）的对局不计入历史
+      if (!hasPlayedCurrentGame) {
         stopTimer();
         gameStartTime = null;
         return;
