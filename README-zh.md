@@ -1,5 +1,7 @@
 # 2048 React Native 与 Web 版本
 
+[English](README.md) | [中文说明](README-zh.md)
+
 本仓库包含经典 2048 游戏的两个实现：React Native 版本和 Web 版本。
 
 - `rn/`：使用函数组件和 hooks 的 React Native 实现。
@@ -35,8 +37,4 @@
 ## 许可证
 
 本项目使用 MIT 开源许可证，详情见 `LICENSE` 文件。
-
-## 其他语言
-
-默认的 README 使用英文，参见 `README.md`。
 

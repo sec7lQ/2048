@@ -1,6 +1,6 @@
 # 2048 React Native & Web
 
-English | [中文说明](README-zh.md)
+[English](README.md) | [中文说明](README-zh.md)
 
 This repository contains a simple implementation of the classic 2048 game for both React Native (`rn/`) and the web (`web/`).
 
@@ -37,7 +37,3 @@ This repository contains a simple implementation of the classic 2048 game for bo
 ## License
 
 This project is licensed under the MIT License. See `LICENSE` for details.
-
-## Other Languages
-
-For a Chinese version of this README, see `README-zh.md`.
