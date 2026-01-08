@@ -1,0 +1,26 @@
+{
+  "name": "2048-capacitor",
+  "version": "1.0.0",
+  "description": "2048 game - Capacitor mobile app",
+  "author": "7lq",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "android": "cap run android",
+    "ios": "cap run ios",
+    "sync": "cap sync",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios",
+    "build:android": "cd android && ./gradlew assembleRelease",
+    "build:android:debug": "cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

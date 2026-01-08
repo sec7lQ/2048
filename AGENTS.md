@@ -2,14 +2,15 @@
 
 ## Project Structure & Module Organization
 
-- `rn/`: React Native 2048 implementation (`App.js`, `index.js`, `package.json`).
+- Repository root: React Native 2048 app (`App.js`, `index.js`, `package.json`, `android/`, `ios/`).
 - `web/`: Standalone browser version in `web/index.html` with inline styles and game logic.
-- No native `android/` or `ios/` folders are versioned; create a host React Native project and copy these JS files into it when you need a full app shell.
+- `rn/`: Legacy React Native project kept for reference; new work should target the root app.
 
 ## Build, Test & Development Commands
 
-- Install JS dependencies: `cd rn && npm install`.
-- React Native dev (inside a host RN project): `npm run start` to start Metro, `npm run android` / `npm run ios` to run on device or simulator.
+- Install JS dependencies: `npm install` from the repository root.
+- React Native dev: `npm run start` to start Metro, `npm run android` / `npm run ios` to run on device or simulator.
+- Android packaging (from repo root): `cd android && ./gradlew assembleDebug` or `./gradlew assembleRelease`.
 - Web version: open `web/index.html` directly in a browser, or serve it with any static server (for example `cd web && npx serve .`).
 - There is currently no automated test suite or build pipeline configured in this repo.
 
@@ -35,4 +36,3 @@
 
 - This project is fully client-side; never hard-code secrets, tokens, or private endpoints into `web/index.html` or React Native code.
 - Keep local configuration (emulators, keystores, API keys) in untracked files or environment variables rather than committing them to the repository.
-
