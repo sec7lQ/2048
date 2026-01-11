@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">2048Beta</string>
+    <string name="app_name">2048</string>
     <string name="title_activity_main">2048Beta</string>
-    <string name="package_name">com.game2048.beta</string>
-    <string name="custom_url_scheme">com.game2048.beta</string>
+    <string name="package_name">com.qilinqian.game2048.beta</string>
+    <string name="custom_url_scheme">com.qilinqian.game2048.beta</string>
 </resources>

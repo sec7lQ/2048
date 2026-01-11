@@ -1,4 +1,4 @@
-package com.game2048;
+package com.qilinqian.game2048;
 
 import android.os.Build;
 import android.os.Bundle;

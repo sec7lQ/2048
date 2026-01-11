@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>2048 Classic</title>
   <style>
     :root {
@@ -79,13 +79,7 @@
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       :root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
     }
-    * {
-      box-sizing: border-box;
-      touch-action: pan-x pan-y; /* 全局禁止所有缩放行为（双击/捏合） */
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
-    }
+    * { box-sizing: border-box; }
     html, body {
       margin: 0;
       padding: 0;
@@ -115,10 +109,6 @@
       display: flex;
       justify-content: center;
       overflow: hidden;
-      /* 防止小米等系统的智能文本选择功能触发 */
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
     }
     .wrapper {
       width: 100%;
@@ -136,6 +126,58 @@
       z-index: 2;
       flex-direction: column;
       gap: 10px;
+    }
+    .seed-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      background-color: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--divider);
+      font-size: 12px;
+      line-height: 1;
+      max-width: min(92vw, 520px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition);
+    }
+    .seed-box .seed-label {
+      opacity: 0.72;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-weight: 700;
+    }
+    .seed-box .seed-value {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .seed-box.is-editing {
+      background-color: var(--cell);
+    }
+    .seed-box input {
+      width: 16ch;
+      max-width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      font-weight: 700;
+      text-align: center;
+      padding: 0;
+      margin: 0;
+    }
+    .seed-box.is-copied {
+      border-color: var(--button-hover);
     }
     .toast {
       position: fixed;
@@ -163,6 +205,31 @@
       opacity: 1;
       transform: translateX(-50%) translateY(-4px);
     }
+    .theme-toggle {
+      width: var(--action-button-size);
+      height: var(--action-button-size);
+      min-width: var(--action-button-size);
+      min-height: var(--action-button-size);
+      padding: 0;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      color: var(--bright);
+    }
+    .theme-toggle svg {
+      width: var(--control-icon-size);
+      height: var(--control-icon-size);
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle.is-dark .icon-sun { display: block; }
+    .theme-toggle.is-dark .icon-moon { display: none; }
     h1 { margin: 0; font-size: 48px; letter-spacing: 1px; }
     .scores { display: flex; gap: 14px; }
     .score-box {
@@ -177,7 +244,7 @@
       transition: background-color var(--theme-transition), color var(--theme-transition);
     }
     .score-box .label { font-size: 12px; text-transform: uppercase; }
-    .score-box .value { font-size: 20px; font-weight: bold; line-height: 1; }
+    .score-box .value { font-size: 20px; font-weight: bold; }
     .time-box #time {
       font-size: 20px;
       line-height: 1;
@@ -195,12 +262,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 2px;
+      gap: 4px;
     }
     .time-icon {
-      width: 18px;
-      height: 18px;
-      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
       color: var(--bright);
       display: inline-flex;
       align-items: center;
@@ -271,7 +337,6 @@
       justify-content: center;
       gap: 0;
       line-height: 0;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
     }
     .action-button svg {
       width: var(--control-icon-size);
@@ -308,7 +373,6 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
     }
     .size-toggle svg {
       width: 16px;
@@ -364,25 +428,15 @@
     .is-landscape .score-box .value-row {
       gap: 2px;
     }
-    .is-landscape .time-box #time {
-      font-size: 12px;
-    }
-    .is-landscape .time-box #time.is-compact {
-      font-size: 10px;
-    }
-    .is-landscape .time-box #time.is-tight {
-      font-size: 8px;
-    }
     .is-landscape .controls-panel {
       position: fixed;
-      left: calc(var(--board-center-x) - (var(--board-size) / 2));
-      top: var(--board-top);
+      left: calc(var(--board-center-x) - (var(--board-size) / 2) - var(--size-toggle-width, 48px) - 12px);
+      top: calc(var(--board-center-y) - (var(--board-size) / 2));
       right: auto;
-      transform: translateX(calc(-100% - 12px));
+      transform: none;
       margin: 0;
-      width: auto;
+      width: var(--size-toggle-width, 48px);
       max-width: none;
-      flex-direction: column;
       align-items: center;
     }
     .is-landscape .board-controls {
@@ -396,21 +450,18 @@
       min-width: 34px;
       min-height: 34px;
     }
-    .is-landscape .board-center .size-toggle {
-      top: auto;
-      left: auto;
-      right: calc(100% + 5px);
-      bottom: 0;
-      transform: none;
-      flex-direction: column;
-      align-items: center;
-    }
-    .is-landscape .size-toggle button {
+    .is-landscape .theme-toggle {
       width: 34px;
       height: 34px;
       min-width: 34px;
       min-height: 34px;
-      padding: 0;
+    }
+    .is-landscape .board-center .size-toggle {
+      top: 50%;
+      left: 0;
+      bottom: auto;
+      transform: translate(calc(-100% - 12px), -50%);
+      flex-direction: column;
     }
     .size-toggle .icon-up,
     .size-toggle .icon-down {
@@ -439,7 +490,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 24px;
       z-index: 10;
       opacity: 0;
       -webkit-backdrop-filter: blur(0);
@@ -453,12 +504,12 @@
       backdrop-filter: blur(6px);
     }
     .history-panel {
-      width: min(380px, calc(100% - 32px));
-      max-height: min(70vh, 560px);
+      width: min(420px, 100%);
+      height: min(60vh, 520px);
       background-color: var(--panel);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
       font-size: 13px;
       color: var(--text);
       display: flex;
@@ -466,9 +517,6 @@
       opacity: 0;
       transform: translateY(10px) scale(0.96);
       transition: transform 200ms ease, opacity 200ms ease, background-color var(--theme-transition), color var(--theme-transition);
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
     }
     .history-modal.is-open .history-panel {
       opacity: 1;
@@ -478,12 +526,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       gap: 12px;
     }
     .history-title {
       font-weight: bold;
-      font-size: 16px;
+      font-size: 14px;
     }
     .history-close {
       padding: 0;
@@ -496,7 +544,6 @@
       align-items: center;
       justify-content: center;
       line-height: 0;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
     }
     .history-close:hover {
       background: #e26b67;
@@ -515,542 +562,92 @@
       flex: 1;
       min-height: 0;
       overflow-y: auto;
-      border-radius: 6px;
+      border-radius: 4px;
       background-color: var(--cell);
-      padding: 10px;
-      touch-action: pan-y; /* 只允许垂直滚动，禁止所有缩放 */
+      padding: 6px 8px;
+      touch-action: pan-y;
       overscroll-behavior-y: contain;
       -webkit-overflow-scrolling: touch;
       transition: background-color var(--theme-transition);
     }
     .history-item {
-      position: relative;
-      margin-bottom: 8px;
-      overflow: hidden;
-      border-radius: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--divider);
+      display: block;
+      transition: border-color var(--theme-transition);
     }
     .history-item:last-child {
-      margin-bottom: 0;
+      border-bottom: none;
     }
-    /* 滑动容器：内容+删除按钮 */
-    .history-item-slider {
-      display: flex;
-      align-items: stretch;
-      transition: transform 0.2s ease;
-      transform: translateX(0);
-    }
-    .history-item.is-swiping .history-item-slider {
-      transition: none;
-    }
-    .history-item.show-delete .history-item-slider {
-      transform: translateX(-70px);
-    }
-    /* 内容区域 */
-    .history-item-content {
-      flex: 0 0 calc(100% - 8px);
-      width: calc(100% - 8px);
-      box-sizing: border-box;
-      padding: 10px 12px;
-      border-radius: 8px 0 0 8px;
-      background-color: var(--panel);
-      border: 1px solid var(--divider);
-      border-right: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      transition: background-color var(--theme-transition), border-color var(--theme-transition);
-    }
-    /* 删除按钮：紧贴内容右侧，高度自动匹配 */
-    .history-item-delete {
-      flex: 0 0 70px;
-      width: 70px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #d9534f;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 500;
-      border: 1px solid var(--divider);
-      border-left: none;
-      border-radius: 0 8px 8px 0;
-      cursor: pointer;
-    }
-    .history-item-delete:active {
-      background: #c9302c;
-    }
-    .history-header-row {
+    .history-main {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 10px;
+      min-width: 0;
     }
-    .history-time {
-      font-size: 12px;
-      opacity: 0.7;
+    .history-meta {
+      flex: 1 1 auto;
+      min-width: 0;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .history-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .history-stats-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .history-stat {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 13px;
-      white-space: nowrap;
-    }
-    .history-stat-icon {
-      width: 16px;
-      height: 16px;
-      opacity: 0.6;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .history-stat-icon svg {
-      width: 100%;
-      height: 100%;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-    }
-    .history-stat-value {
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-    }
-    .history-stat-label {
-      font-size: 11px;
-      opacity: 0.6;
-      margin-left: 2px;
-    }
-    .history-seed-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding-top: 6px;
-      border-top: 1px solid var(--divider);
-      margin-top: 2px;
-    }
-    .history-seed-label {
+    .history-seed {
       flex: 0 0 auto;
-      padding: 0 8px;
-      height: 24px;
+      padding: 0 10px;
+      height: 20px;
+      min-height: 20px;
       border-radius: 4px;
-      -webkit-user-select: none;
-      user-select: none;
       font-size: 11px;
-      line-height: 24px;
+      line-height: 20px;
       background-color: var(--board);
       color: var(--bright);
       border: 1px solid var(--divider);
-      opacity: 0.85;
+      opacity: 0.9;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
       transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition);
     }
-    .history-seed-copy,
-    .history-seed-use {
-      flex: 0 0 auto;
-      padding: 0;
-      width: 24px;
-      height: 24px;
-      min-width: 24px;
-      min-height: 24px;
-      border-radius: 4px;
-      -webkit-user-select: none;
-      user-select: none;
-      background-color: var(--board);
-      color: var(--bright);
-      border: 1px solid var(--divider);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0.85;
-      transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition), opacity 120ms ease;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
-      cursor: pointer;
-    }
-    .history-seed-copy:focus,
-    .history-seed-use:focus {
-      opacity: 1;
-      background-color: var(--button-hover);
+    .history-seed.is-copied {
       border-color: var(--button-hover);
-      outline: none;
-    }
-    @media (hover: hover) {
-      .history-seed-copy:hover,
-      .history-seed-use:hover {
-        opacity: 1;
-        background-color: var(--button-hover);
-        border-color: var(--button-hover);
-      }
-    }
-    .history-seed-copy.is-copied {
-      border-color: var(--button-hover);
-      background-color: var(--button-hover);
       opacity: 1;
-    }
-    .history-seed-use.is-active {
-      border-color: #5cb85c;
-      background-color: #5cb85c;
-      color: #fff;
-      opacity: 1;
-    }
-    .history-seed-icon {
-      width: 14px;
-      height: 14px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .history-seed-icon svg {
-      width: 100%;
-      height: 100%;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
     }
     .history-seed-missing {
-      font-size: 10px;
-      opacity: 0.5;
+      font-size: 11px;
+      opacity: 0.6;
       user-select: none;
       white-space: nowrap;
-      padding: 0 4px;
     }
-    /* 桌面端：隐藏滑动删除按钮，恢复内容区域完整样式 */
-    @media (hover: hover) {
-      .history-item-delete {
-        display: none;
-      }
-      .history-item-slider {
-        transform: none !important;
-      }
-      .history-item-content {
-        flex: 0 0 100%;
-        width: 100%;
-        border-radius: 8px;
-        border-right: 1px solid var(--divider);
-      }
-    }
-    /* 桌面端内联删除按钮 */
-    .history-delete-inline {
+    .history-delete {
+      margin-left: 8px;
       padding: 0;
-      width: 22px;
-      height: 22px;
-      font-size: 12px;
-      display: none;
+      width: 20px;
+      height: 20px;
+      font-size: 13px;
+      display: flex;
       align-items: center;
       justify-content: center;
       background: #d9534f;
       color: #f9f6f2;
-      border: none;
-      border-radius: 4px;
+      border-radius: 3px;
       opacity: 0;
       pointer-events: none;
       transition: opacity 120ms ease;
-      cursor: pointer;
-      flex-shrink: 0;
     }
-    @media (hover: hover) {
-      .history-delete-inline {
-        display: flex;
-      }
-      .history-item:hover .history-delete-inline {
-        opacity: 1;
-        pointer-events: auto;
-      }
-      .history-delete-inline:hover {
-        background: #c9302c;
-      }
-    }
-    .history-delete-inline:active {
-      background: #c9302c;
-    }
-    .settings-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 10;
-      opacity: 0;
-      -webkit-backdrop-filter: blur(0);
-      backdrop-filter: blur(0);
-      transition: opacity 200ms ease, background 200ms ease, backdrop-filter 200ms ease;
-    }
-    .settings-modal.is-open {
+    .history-item:hover .history-delete,
+    .history-item.show-delete .history-delete {
       opacity: 1;
-      background: rgba(0, 0, 0, 0.35);
-      -webkit-backdrop-filter: blur(6px);
-      backdrop-filter: blur(6px);
+      pointer-events: auto;
     }
-    .settings-panel {
-      width: min(360px, calc(100% - 32px));
-      max-height: min(80vh, 600px);
-      background-color: var(--panel);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-      font-size: 13px;
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      opacity: 0;
-      transform: translateY(10px) scale(0.96);
-      transition: transform 200ms ease, opacity 200ms ease, background-color var(--theme-transition), color var(--theme-transition);
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
-    }
-    .settings-modal.is-open .settings-panel {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-    .settings-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-      gap: 12px;
-    }
-    .settings-title {
-      font-weight: bold;
-      font-size: 18px;
-    }
-    .settings-close {
-      padding: 0;
-      width: 34px;
-      height: 34px;
-      min-width: 34px;
-      min-height: 34px;
+    .history-delete:hover,
+    .history-delete:active,
+    .history-delete:focus {
       background: #d9534f;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 0;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
-    }
-    .settings-close:hover {
-      background: #e26b67;
-    }
-    .settings-close svg {
-      width: 18px;
-      height: 18px;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
       color: #f9f6f2;
-    }
-    .settings-content {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      padding-right: 4px;
-    }
-    .settings-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .settings-section-title {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      opacity: 0.6;
-    }
-    .settings-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px;
-      background-color: var(--cell);
-      border-radius: 8px;
-      transition: background-color var(--theme-transition);
-    }
-    .settings-item-vertical {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .settings-item-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 500;
-    }
-    .settings-item-icon {
-      width: 20px;
-      height: 20px;
-      opacity: 0.6;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .settings-item-icon svg {
-      width: 100%;
-      height: 100%;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-    }
-    .settings-toggle-group {
-      display: flex;
-      gap: 4px;
-      background-color: var(--board);
-      padding: 3px;
-      border-radius: 6px;
-    }
-    .settings-toggle-btn {
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 500;
-      border-radius: 4px;
-      background: transparent;
-      color: var(--bright);
-      opacity: 0.6;
-      transition: opacity 150ms ease, background-color 150ms ease;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
-    }
-    .settings-toggle-btn:hover {
-      opacity: 0.8;
-      background: transparent;
-    }
-    .settings-toggle-btn.is-active {
-      background-color: var(--button);
-      opacity: 1;
-    }
-    .settings-seed-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .settings-seed-text {
-      flex: 1;
-      min-width: 0;
-    }
-    .settings-seed-label {
-      font-size: 11px;
-      opacity: 0.6;
-      margin-bottom: 2px;
-    }
-    .settings-seed-value-wrapper {
-      position: relative;
-      min-height: 20px;
-    }
-    .settings-seed-value {
-      font-family: monospace;
-      font-size: 13px;
-      font-weight: 600;
-      word-break: break-all;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-    .settings-seed-value.hidden {
-      display: none;
-    }
-    .settings-seed-input-inline {
-      width: 100%;
-      padding: 6px 10px;
-      font-size: 16px; /* iOS 自动缩放阈值为 16px，低于此值会触发自动放大 */
-      font-family: monospace;
-      font-weight: 600;
-      border: 1px solid var(--button);
-      border-radius: 4px;
-      background-color: var(--panel);
-      color: var(--text);
       outline: none;
-      transition: border-color 150ms ease, background-color var(--theme-transition), color var(--theme-transition);
-      /* 输入框需要允许文本选择和长按菜单 */
-      -webkit-user-select: text;
-      user-select: text;
-      -webkit-touch-callout: default;
-    }
-    .settings-seed-input-inline:focus {
-      border-color: var(--button-hover);
-    }
-    .settings-seed-input-inline.hidden {
-      display: none;
-    }
-    .settings-seed-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .settings-seed-actions.hidden {
-      display: none;
-    }
-    .settings-btn-secondary {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 8px 12px;
-      font-size: 12px;
-      font-weight: 500;
-      border-radius: 6px;
-      background-color: var(--board);
-      color: var(--bright);
-      transition: background-color var(--theme-transition), opacity 150ms ease;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
-    }
-    .settings-btn-secondary:hover {
-      background-color: var(--button-hover);
-    }
-    .settings-btn-secondary.is-copied {
-      background-color: var(--button);
-    }
-    .settings-btn-secondary svg {
-      width: 14px;
-      height: 14px;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-    }
-    .settings-btn-primary {
-      flex: 1;
-      padding: 8px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      border-radius: 6px;
-      background-color: var(--button);
-      color: var(--bright);
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
-    }
-    .settings-btn-primary:hover {
-      background-color: var(--button-hover);
-    }
-    .settings-seed-hint {
-      font-size: 11px;
-      opacity: 0.5;
-      line-height: 1.4;
     }
     button {
       padding: 10px 16px;
@@ -1065,7 +662,6 @@
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
       transition: background-color var(--theme-transition), color var(--theme-transition);
     }
     button:hover { background-color: var(--button-hover); }
@@ -1095,12 +691,12 @@
       filter: none;
       transform: none;
     }
-    .score-box.time-box {
+    .score-box.time-box,
+    .theme-toggle {
       -webkit-tap-highlight-color: transparent;
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
     }
     .board {
       margin: 0 auto;
@@ -1114,7 +710,6 @@
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
       overflow: hidden;
       transition: background-color var(--theme-transition);
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
     }
     .board.restarting {
       animation: board-reset 180ms ease;
@@ -1154,10 +749,10 @@
       /* 使用 GPU 加速并支持高刷屏幕的平滑动画 */
       will-change: transform;
       transform: translate3d(var(--tx), var(--ty), 0);
-      transition: transform 184ms ease-out;
+      transition: transform 120ms ease-out;
     }
     .tiles.clearing .tile {
-      animation: tile-clear 278ms ease forwards;
+      animation: tile-clear 180ms ease forwards;
     }
     @keyframes tile-clear {
       from {
@@ -1182,17 +777,13 @@
     }
     .tile-inner.tile-small { font-size: calc(var(--tile-font-size) * 0.82); }
     .tile-inner.tile-tiny { font-size: calc(var(--tile-font-size) * 0.62); }
-    .tile-inner.tile-new { animation: pop 278ms ease; animation-fill-mode: both; }
-    .tile-inner.tile-merged { animation: bump 350ms ease; animation-fill-mode: both; }
+    .tile-inner.tile-new { animation: pop 180ms ease; animation-fill-mode: both; }
+    .tile-inner.tile-merged { animation: bump 200ms ease; animation-fill-mode: both; }
     @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-    @keyframes bump { 
-      0% { transform: scale(1); } 
-      50% { transform: scale(1.15); } 
-      100% { transform: scale(1); } 
-    }
-    .tile-inner.tile-undo-disappear { animation: undo-disappear 242ms ease; animation-fill-mode: both; }
-    .tile-inner.tile-undo-ghost { animation: undo-ghost 242ms ease; animation-fill-mode: both; }
-    .tile-inner.tile-undo-split { animation: undo-split 278ms ease; animation-fill-mode: both; }
+    @keyframes bump { 0% { transform: scale(1.15); } 100% { transform: scale(1); } }
+    .tile-inner.tile-undo-disappear { animation: undo-disappear 160ms ease; animation-fill-mode: both; }
+    .tile-inner.tile-undo-ghost { animation: undo-ghost 160ms ease; animation-fill-mode: both; }
+    .tile-inner.tile-undo-split { animation: undo-split 180ms ease; animation-fill-mode: both; }
     @keyframes undo-disappear {
       from { transform: scale(1); opacity: 1; }
       to { transform: scale(0.2); opacity: 0; }
@@ -1213,176 +804,23 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
       color: var(--text);
       z-index: 5;
-      padding: 16px;
+      flex-direction: column;
+      gap: 12px;
       opacity: 0;
+      transform: translateY(10px) scale(0.96);
       -webkit-backdrop-filter: blur(0);
       backdrop-filter: blur(0);
-      transition: opacity 200ms ease, backdrop-filter 200ms ease, background-color var(--theme-transition), color var(--theme-transition);
+      transition: transform 200ms ease, opacity 200ms ease, backdrop-filter 200ms ease, background-color var(--theme-transition), color var(--theme-transition);
     }
     .game-over.is-open {
       opacity: 1;
+      transform: translateY(0) scale(1);
       -webkit-backdrop-filter: blur(6px);
       backdrop-filter: blur(6px);
-    }
-    .game-over-card {
-      background-color: var(--panel);
-      border-radius: 16px;
-      padding: 24px 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      width: 100%;
-      max-width: 280px;
-      opacity: 0;
-      transform: translateY(12px) scale(0.94);
-      transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease, background-color var(--theme-transition);
-    }
-    .game-over.is-open .game-over-card {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-    .game-over-title {
-      font-size: 24px;
-      font-weight: bold;
-      text-align: center;
-    }
-    .new-record-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #5a4a3a;
-      animation: badge-pop 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .new-record-badge.hidden {
-      display: none;
-    }
-    .new-record-icon {
-      font-size: 16px;
-    }
-    @keyframes badge-pop {
-      0% { transform: scale(0); opacity: 0; }
-      60% { transform: scale(1.1); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .game-over-stats {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      width: 100%;
-    }
-    .game-over-stat {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 12px 8px;
-      background-color: var(--cell);
-      border-radius: 10px;
-      min-width: 0;
-      transition: background-color var(--theme-transition);
-    }
-    .game-over-stat-icon {
-      width: 20px;
-      height: 20px;
-      opacity: 0.5;
-    }
-    .game-over-stat-icon svg {
-      width: 100%;
-      height: 100%;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-    }
-    .game-over-stat-value {
-      font-size: 20px;
-      font-weight: bold;
-      font-variant-numeric: tabular-nums;
-      line-height: 1.2;
-    }
-    .game-over-stat-label {
-      font-size: 11px;
-      opacity: 0.6;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .game-over-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 100%;
-      margin-top: 4px;
-    }
-    .game-over-btn-primary {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 14px 20px;
-      font-size: 16px;
-      font-weight: 600;
-      border-radius: 10px;
-      background-color: var(--button);
-      color: var(--bright);
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
-    }
-    .game-over-btn-primary:hover {
-      background-color: var(--button-hover);
-    }
-    .game-over-btn-primary svg {
-      width: 20px;
-      height: 20px;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-    }
-    .game-over-btn-secondary {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      width: 100%;
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 500;
-      border-radius: 8px;
-      background-color: var(--cell);
-      color: var(--text);
-      opacity: 0.85;
-      transition: background-color var(--theme-transition), color var(--theme-transition), opacity 150ms ease;
-      touch-action: pan-x pan-y; /* 禁止所有缩放 */
-    }
-    .game-over-btn-secondary:hover {
-      opacity: 1;
-      background-color: var(--divider);
-    }
-    .game-over-btn-secondary svg {
-      width: 16px;
-      height: 16px;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-    }
-    .game-over-btn-secondary.is-copied {
-      background-color: var(--button);
-      color: var(--bright);
-      opacity: 1;
     }
     .hidden { display: none; }
     @media (max-width: 520px) {
@@ -1425,6 +863,7 @@
 <body>
   <div class="wrapper">
     <header>
+      <div id="seedBox" class="seed-box pressable" role="button" tabindex="0" aria-label="种子"></div>
       <div class="scores">
         <div class="score-box">
           <div class="label">score</div>
@@ -1475,10 +914,20 @@
             <polyline points="12 8 12 12 15 14"></polyline>
           </svg>
         </button>
-        <button id="settingsOpen" class="action-button pressable" type="button" aria-haspopup="dialog" aria-controls="settingsModal" aria-label="设置" title="设置">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        <button id="themeToggle" class="theme-toggle pressable" type="button" aria-label="切换主题" title="切换主题">
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <line x1="12" y1="2" x2="12" y2="5"></line>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+            <line x1="2" y1="12" x2="5" y2="12"></line>
+            <line x1="19" y1="12" x2="22" y2="12"></line>
+            <line x1="4.2" y1="4.2" x2="6.4" y2="6.4"></line>
+            <line x1="17.6" y1="17.6" x2="19.8" y2="19.8"></line>
+            <line x1="4.2" y1="19.8" x2="6.4" y2="17.6"></line>
+            <line x1="17.6" y1="6.4" x2="19.8" y2="4.2"></line>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.8A8 8 0 0 1 11.2 3a7 7 0 0 0 0 18A8 8 0 0 0 21 12.8z"></path>
           </svg>
         </button>
       </div>
@@ -1509,46 +958,8 @@
           <div class="tiles" id="tiles"></div>
           <div class="tiles tiles-fx" id="tilesFx" aria-hidden="true"></div>
           <div id="overlay" class="game-over hidden">
-            <div class="game-over-card">
-              <div id="overlayText" class="game-over-title">游戏结束</div>
-              <div id="newRecordBadge" class="new-record-badge hidden">
-                <span class="new-record-icon">🏆</span>
-                <span>新纪录！</span>
-              </div>
-              <div class="game-over-stats">
-                <div class="game-over-stat">
-                  <div class="game-over-stat-icon">
-                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  </div>
-                  <div class="game-over-stat-value" id="finalScore">0</div>
-                  <div class="game-over-stat-label">得分</div>
-                </div>
-                <div class="game-over-stat">
-                  <div class="game-over-stat-icon">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>
-                  </div>
-                  <div class="game-over-stat-value" id="finalTime">0:00</div>
-                  <div class="game-over-stat-label">时长</div>
-                </div>
-                <div class="game-over-stat">
-                  <div class="game-over-stat-icon">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
-                  </div>
-                  <div class="game-over-stat-value" id="finalSize">4×4</div>
-                  <div class="game-over-stat-label">棋盘</div>
-                </div>
-              </div>
-              <div class="game-over-actions">
-                <button id="restart" class="game-over-btn-primary pressable">
-                  <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.66-5.66"></path><polyline points="18 4 18 9 13 9"></polyline><path d="M20 12a8 8 0 0 1-13.66 5.66"></path><polyline points="6 20 6 15 11 15"></polyline></svg>
-                  <span>再来一局</span>
-                </button>
-                <button id="copySeedBtn" class="game-over-btn-secondary pressable" type="button">
-                  <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                  <span>复制种子</span>
-                </button>
-              </div>
-            </div>
+            <div id="overlayText">游戏结束</div>
+            <button id="restart">再来一局</button>
           </div>
         </div>
       </div>
@@ -1568,69 +979,6 @@
       <div id="historyList" class="history-list">暂无对局</div>
     </div>
   </div>
-  <div id="settingsModal" class="settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-    <div class="settings-panel">
-      <div class="settings-header">
-        <div id="settingsTitle" class="settings-title">设置</div>
-        <button id="settingsClose" class="settings-close pressable" type="button" aria-label="关闭设置" title="关闭">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-      <div class="settings-content">
-        <div class="settings-section">
-          <div class="settings-section-title">外观</div>
-          <div class="settings-item">
-            <div class="settings-item-label">
-              <span class="settings-item-icon">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="22"></line><line x1="2" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="22" y2="12"></line></svg>
-              </span>
-              <span>主题</span>
-            </div>
-            <div id="themeSelector" class="settings-toggle-group">
-              <button class="settings-toggle-btn" data-theme="light">浅色</button>
-              <button class="settings-toggle-btn" data-theme="dark">深色</button>
-              <button class="settings-toggle-btn" data-theme="system">跟随系统</button>
-            </div>
-          </div>
-        </div>
-        <div class="settings-section">
-          <div class="settings-section-title">游戏种子</div>
-          <div id="seedSettingsItem" class="settings-item settings-item-vertical">
-            <div class="settings-seed-info">
-              <span class="settings-item-icon">
-                <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
-              </span>
-              <div class="settings-seed-text">
-                <div class="settings-seed-label">当前种子</div>
-                <div id="settingsSeedDisplay" class="settings-seed-value-wrapper">
-                  <span id="settingsSeedValue" class="settings-seed-value">—</span>
-                  <input id="seedEditInput" type="text" class="settings-seed-input-inline hidden" placeholder="输入种子..." autocomplete="off" autocapitalize="off" spellcheck="false" />
-                </div>
-              </div>
-            </div>
-            <div id="seedActionsNormal" class="settings-seed-actions">
-              <button id="copySeedSettings" class="settings-btn-secondary pressable" type="button">
-                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span>复制</span>
-              </button>
-              <button id="editSeedSettings" class="settings-btn-secondary pressable" type="button">
-                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                <span>编辑</span>
-              </button>
-            </div>
-            <div id="seedActionsEdit" class="settings-seed-actions hidden">
-              <button id="seedEditCancel" class="settings-btn-secondary pressable" type="button">取消</button>
-              <button id="seedEditConfirm" class="settings-btn-primary pressable" type="button">确认并开始</button>
-            </div>
-          </div>
-          <div class="settings-seed-hint">种子决定方块的生成顺序，相同种子可复现同一局游戏</div>
-        </div>
-      </div>
-    </div>
-  </div>
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script>
     let gridSize = 4;
@@ -1643,11 +991,6 @@
     const timeBox = document.getElementById('timeBox');
     const overlay = document.getElementById('overlay');
     const overlayText = document.getElementById('overlayText');
-    const finalScoreEl = document.getElementById('finalScore');
-    const finalTimeEl = document.getElementById('finalTime');
-    const finalSizeEl = document.getElementById('finalSize');
-    const newRecordBadge = document.getElementById('newRecordBadge');
-    const copySeedBtn = document.getElementById('copySeedBtn');
     const undoBtn = document.getElementById('undoMove');
     const newGameBtn = document.getElementById('newGame');
     const restartBtn = document.getElementById('restart');
@@ -1658,18 +1001,8 @@
     const historyOpenBtn = document.getElementById('historyOpen');
     const historyCloseBtn = document.getElementById('historyClose');
     const historyListEl = document.getElementById('historyList');
-    const settingsModal = document.getElementById('settingsModal');
-    const settingsOpenBtn = document.getElementById('settingsOpen');
-    const settingsCloseBtn = document.getElementById('settingsClose');
-    const themeSelector = document.getElementById('themeSelector');
-    const settingsSeedValue = document.getElementById('settingsSeedValue');
-    const copySeedSettings = document.getElementById('copySeedSettings');
-    const editSeedSettings = document.getElementById('editSeedSettings');
-    const seedEditInput = document.getElementById('seedEditInput');
-    const seedEditCancel = document.getElementById('seedEditCancel');
-    const seedEditConfirm = document.getElementById('seedEditConfirm');
-    const seedActionsNormal = document.getElementById('seedActionsNormal');
-    const seedActionsEdit = document.getElementById('seedActionsEdit');
+    const themeToggle = document.getElementById('themeToggle');
+    const seedBox = document.getElementById('seedBox');
     const toastEl = document.getElementById('toast');
     const controlsPanelEl = document.querySelector('.controls-panel');
     const boardCenterEl = document.querySelector('.board-center');
@@ -1681,19 +1014,19 @@
     let currentSeed = '';
     let seedForNextGame = '';
     let rngState = 1; // uint32
+    let isSeedEditing = false;
     let toastTimer = null;
-    let isSettingsOpen = false;
 
     const sizes = [3, 4, 5, 6, 7, 8];
     let sizeIndex = sizes.indexOf(gridSize);
     const themeStorageKey = 'theme-2048-preference';
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-    let themePreference = loadThemePreference();
+    let themePreference = 'system';
+    clearThemePreference();
 
     let grid = createEmpty();
     let score = 0;
     let hasPlayedCurrentGame = false;
-    let isNewRecord = false;
     let bestBySize = loadBestBySize();
     let best = bestBySize[gridSize] || 0;
     
@@ -1718,13 +1051,12 @@
     let undoStack = [];
     let savedDocTouchAction = '';
     let savedBodyTouchAction = '';
-    const UNDO_FX_MS = 303;
+    const TILE_ANIMATION_LOCK_MS = 220;
+    const UNDO_FX_MS = 200;
     const historySwipeState = {
       item: null,
-      slider: null,
       startX: 0,
       startY: 0,
-      currentX: 0,
       active: false,
       moved: false,
     };
@@ -1740,39 +1072,15 @@
       }
     }
 
-    // 全局阻止 iOS 放大镜/文本选择（输入框除外）
-    function disableIosMagnifier() {
-      // 阻止 selectstart 事件（输入框除外）
-      document.addEventListener('selectstart', e => {
-        const tag = e.target && e.target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-        e.preventDefault();
-      }, { passive: false });
-
-      // 阻止长按弹出菜单（输入框除外）
-      document.addEventListener('contextmenu', e => {
-        const tag = e.target && e.target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-        e.preventDefault();
-      }, { passive: false });
-    }
-
     bestEl.textContent = best;
     enableIosImmersive();
-    disableIosMagnifier();
     applySize();
     renderHistory();
     applyThemePreference(themePreference);
+    renderSeedBox();
 
     newGameBtn.addEventListener('click', startGameAnimated);
     restartBtn.addEventListener('click', startGameAnimated);
-    if (copySeedBtn) {
-      copySeedBtn.addEventListener('click', handleCopySeedFromOverlay);
-      // 阻止小米等系统的触摸文本选择
-      copySeedBtn.addEventListener('touchend', e => {
-        clearTextSelection();
-      }, { passive: true });
-    }
     if (undoBtn) {
       undoBtn.addEventListener('click', undoMove);
     }
@@ -1797,53 +1105,6 @@
       historyModal.addEventListener('click', e => {
         if (e.target === historyModal) closeHistory();
       });
-      // Prevent Android smart text selection
-      historyModal.addEventListener('selectstart', e => e.preventDefault());
-      historyModal.addEventListener('contextmenu', e => e.preventDefault());
-    }
-    // Settings modal event listeners
-    if (settingsOpenBtn) {
-      settingsOpenBtn.addEventListener('click', openSettings);
-    }
-    if (settingsCloseBtn) {
-      settingsCloseBtn.addEventListener('click', closeSettings);
-    }
-    if (settingsModal) {
-      settingsModal.addEventListener('click', e => {
-        if (e.target === settingsModal) closeSettings();
-      });
-      // Prevent Android smart text selection
-      settingsModal.addEventListener('selectstart', e => e.preventDefault());
-      settingsModal.addEventListener('contextmenu', e => e.preventDefault());
-    }
-    if (themeSelector) {
-      themeSelector.addEventListener('click', handleThemeSelect);
-    }
-    if (copySeedSettings) {
-      copySeedSettings.addEventListener('click', handleCopySeedFromSettings);
-      copySeedSettings.addEventListener('touchend', e => {
-        clearTextSelection();
-      }, { passive: true });
-    }
-    if (editSeedSettings) {
-      editSeedSettings.addEventListener('click', showSeedEditForm);
-    }
-    if (seedEditCancel) {
-      seedEditCancel.addEventListener('click', hideSeedEditForm);
-    }
-    if (seedEditConfirm) {
-      seedEditConfirm.addEventListener('click', confirmSeedEdit);
-    }
-    if (seedEditInput) {
-      seedEditInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          confirmSeedEdit();
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          hideSeedEditForm();
-        }
-      });
     }
     window.addEventListener('keydown', handleKey);
     addSwipe(document.body, handleSwipe);
@@ -1854,22 +1115,29 @@
     window.addEventListener('beforeunload', handleBeforeUnload);
     if (historyListEl) {
       historyListEl.addEventListener('click', handleHistoryClick);
-      historyListEl.addEventListener('touchend', e => {
-        if (e.target && e.target.closest('.history-seed')) {
-          clearTextSelection();
-        }
-      }, { passive: true });
       setupHistorySwipe();
     }
     if (timeBox) {
       timeBox.addEventListener('click', togglePause);
     }
     window.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        if (isHistoryOpen) closeHistory();
-        if (isSettingsOpen) closeSettings();
-      }
+      if (e.key === 'Escape' && isHistoryOpen) closeHistory();
     });
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        themePreference = getNextThemePreference();
+        applyThemePreference(themePreference);
+      });
+    }
+    if (seedBox) {
+      seedBox.addEventListener('click', handleSeedBoxAction);
+      seedBox.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleSeedBoxAction();
+        }
+      });
+    }
     if (prefersDarkScheme?.addEventListener) {
       prefersDarkScheme.addEventListener('change', handleSystemThemeChange);
     } else if (prefersDarkScheme?.addListener) {
@@ -1914,8 +1182,6 @@
       }
       initSeedForNewGame();
       hasPlayedCurrentGame = false;
-      isNewRecord = false;
-      animations = [];
       grid = createEmpty();
       resetTileIds();
       score = 0;
@@ -1942,22 +1208,9 @@
       startGame();
     }
 
-    function loadThemePreference() {
+    function clearThemePreference() {
       try {
-        const saved = localStorage.getItem(themeStorageKey);
-        if (saved === 'light' || saved === 'dark' || saved === 'system') {
-          return saved;
-        }
-      } catch (e) {
-        // ignore read errors
-      }
-      // 首次安装默认跟随系统
-      return 'system';
-    }
-
-    function saveThemePreference(value) {
-      try {
-        localStorage.setItem(themeStorageKey, value);
+        localStorage.removeItem(themeStorageKey);
       } catch (e) {
         // ignore write errors
       }
@@ -1988,15 +1241,24 @@
       } else {
         document.documentElement.removeAttribute('data-theme');
       }
+      updateThemeToggle();
       updateTileThemeColors();
-      updateThemeSelectorState();
+    }
+
+    function updateThemeToggle() {
+      if (!themeToggle) return;
+      const isDark = getEffectiveTheme() === 'dark';
+      themeToggle.classList.toggle('is-dark', isDark);
+      const label = themePreference === 'system'
+        ? (isDark ? '系统主题：深色' : '系统主题：浅色')
+        : (isDark ? '手动：深色' : '手动：浅色');
+      themeToggle.setAttribute('aria-label', label);
+      themeToggle.setAttribute('title', label);
     }
 
     function handleSystemThemeChange() {
-      // 只有当主题设置为跟随系统时，才响应系统主题变化
-      if (themePreference === 'system') {
-        applyThemePreference(themePreference);
-      }
+      themePreference = 'system';
+      applyThemePreference(themePreference);
     }
 
     function escapeHtml(text) {
@@ -2011,16 +1273,6 @@
     async function copyTextToClipboard(text) {
       const value = String(text ?? '');
       if (!value) return false;
-      // Try Capacitor native clipboard first (works on Android/iOS without triggering system UI)
-      try {
-        if (window.Capacitor?.Plugins?.Clipboard) {
-          await window.Capacitor.Plugins.Clipboard.write({ string: value });
-          return true;
-        }
-      } catch (e) {
-        // fall through to web API
-      }
-      // Try modern Clipboard API
       try {
         if (navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(value);
@@ -2029,18 +1281,18 @@
       } catch (e) {
         // fall through to legacy copy
       }
-      // Legacy fallback
       try {
         const el = document.createElement('textarea');
         el.value = value;
         el.setAttribute('readonly', 'true');
-        el.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none;';
+        el.style.position = 'fixed';
+        el.style.left = '-9999px';
+        el.style.top = '0';
         document.body.appendChild(el);
-        el.focus({ preventScroll: true });
-        el.setSelectionRange(0, value.length);
+        el.focus();
+        el.select();
         const ok = document.execCommand && document.execCommand('copy');
         document.body.removeChild(el);
-        if (window.getSelection) window.getSelection().removeAllRanges();
         return Boolean(ok);
       } catch (e) {
         return false;
@@ -2094,7 +1346,7 @@
       const b = parseInt(currentSeed.slice(8, 16), 16) >>> 0;
       rngState = (a ^ b ^ (gridSize * 0x9e3779b9) ^ SEED_VERSION) >>> 0;
       if (!rngState) rngState = 1;
-      updateSettingsSeedDisplay();
+      renderSeedBox();
     }
 
     function initSeedForNewGame() {
@@ -2145,17 +1397,76 @@
       }, 1200);
     }
 
-    function handleCopySeedFromOverlay() {
-      if (!currentSeed) return;
-      clearTextSelection();
+    function renderSeedBox() {
+      if (!seedBox) return;
+      seedBox.classList.toggle('is-editing', isSeedEditing);
+      if (isSeedEditing) {
+        seedBox.innerHTML = `<span class="seed-label">seed</span><input id="seedInput" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="输入种子" />`;
+        seedBox.setAttribute('aria-label', '编辑种子');
+        seedBox.setAttribute('title', '输入种子，回车确认，Esc 取消');
+        return;
+      }
+      const seedText = currentSeed || '';
+      const mode = hasStarted ? '点击复制' : '点击编辑';
+      seedBox.innerHTML = `<span class="seed-label">seed</span><span class="seed-value">${escapeHtml(seedText || '—')}</span>`;
+      seedBox.setAttribute('aria-label', `种子：${seedText || '—'}，${mode}`);
+      seedBox.setAttribute('title', `${mode}：${seedText || '—'}`);
+    }
+
+    function handleSeedBoxAction() {
+      if (!seedBox || isHistoryOpen) return;
+      if (isSeedEditing) return;
+      if (!hasStarted) {
+        enterSeedEdit();
+        return;
+      }
       copyTextToClipboard(currentSeed).then(ok => {
         if (!ok) return;
-        if (copySeedBtn) {
-          copySeedBtn.classList.add('is-copied');
-          setTimeout(() => copySeedBtn.classList.remove('is-copied'), 800);
-        }
+        flashCopied(seedBox);
         showToast('种子已复制至剪切板');
       });
+    }
+
+    function enterSeedEdit() {
+      if (!seedBox || hasStarted) return;
+      isSeedEditing = true;
+      renderSeedBox();
+      const input = seedBox.querySelector('#seedInput');
+      if (!input) return;
+      input.value = currentSeed || '';
+      requestAnimationFrame(() => {
+        input.focus();
+        input.select();
+      });
+      const commit = () => {
+        if (!isSeedEditing) return;
+        const next = normalizeSeedInput(input.value);
+        // If unchanged, just exit editing without refreshing the board
+        if (next === currentSeed) {
+          isSeedEditing = false;
+          renderSeedBox();
+          return;
+        }
+        isSeedEditing = false;
+        seedForNextGame = next;
+        renderSeedBox();
+        startGame();
+      };
+      const cancel = () => {
+        if (!isSeedEditing) return;
+        isSeedEditing = false;
+        renderSeedBox();
+      };
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          commit();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cancel();
+        }
+      });
+      input.addEventListener('blur', commit, { once: true });
     }
 
     function createEmpty() {
@@ -2197,9 +1508,6 @@
     function resetTileIds() {
       nextTileId = 1;
       gridTileIds = createEmpty();
-      // 清空 DOM 中的所有 tile，确保增量更新系统从干净状态开始
-      if (tilesEl) tilesEl.innerHTML = '';
-      if (tilesFxEl) tilesFxEl.innerHTML = '';
     }
 
     function stopTimer() {
@@ -2247,6 +1555,7 @@
       }
       updatePauseIcon();
       updateSizeToggleVisibility();
+      if (!isPaused) flushBufferedMove();
     }
 
     function updatePauseIcon() {
@@ -2278,13 +1587,13 @@
         ArrowRight: { x: 1, y: 0 },
       };
       if (!map[e.key]) return;
-      if (isHistoryOpen || isSettingsOpen || (hasStarted && isPaused)) return;
+      if (isHistoryOpen || (hasStarted && isPaused)) return;
       e.preventDefault();
       move(map[e.key]);
     }
 
     function handleSwipe(direction) {
-      if (isHistoryOpen || isSettingsOpen || (hasStarted && isPaused)) return;
+      if (isHistoryOpen || (hasStarted && isPaused)) return;
       const map = {
         up: { x: 0, y: -1 },
         down: { x: 0, y: 1 },
@@ -2294,7 +1603,30 @@
       if (map[direction]) move(map[direction]);
     }
 
+    function requestMove(vector) {
+      // 动画播放期间不丢弃输入：先缓存，等动画锁释放后立刻执行
+      if (isAnimating) {
+        const last = bufferedMoves.length ? bufferedMoves[bufferedMoves.length - 1] : null;
+        // 连续相同方向输入意义不大，做一次去重（减少“无效动作”占满队列）
+        if (last && last.x === vector.x && last.y === vector.y) return;
+        bufferedMoves.push(vector);
+        if (bufferedMoves.length > MAX_BUFFERED_MOVES) bufferedMoves.shift();
+        return;
+      }
+      move(vector);
+    }
 
+    function flushBufferedMove() {
+      if (isAnimating) return;
+      if (isHistoryOpen || (hasStarted && isPaused)) return;
+      if (!bufferedMoves.length) return;
+      // 尽量把“无需动画的无效移动”直接消化掉；
+      // 一旦 move() 触发 render()，isAnimating 会被置为 true，此时停止循环，等待下一次解锁继续消费。
+      while (!isAnimating && bufferedMoves.length) {
+        const next = bufferedMoves.shift();
+        move(next);
+      }
+    }
 
     function openHistory() {
       if (!historyModal) return;
@@ -2326,114 +1658,8 @@
       }
       setTimeout(() => {
         if (!isHistoryOpen) historyModal.classList.add('hidden');
+        flushBufferedMove();
       }, 200);
-    }
-
-    function openSettings() {
-      if (!settingsModal) return;
-      updateSettingsSeedDisplay();
-      updateThemeSelectorState();
-      hideSeedEditForm();
-      isSettingsOpen = true;
-      settingsModal.classList.remove('hidden');
-      requestAnimationFrame(() => {
-        if (isSettingsOpen) settingsModal.classList.add('is-open');
-      });
-    }
-
-    function closeSettings() {
-      if (!settingsModal) return;
-      isSettingsOpen = false;
-      settingsModal.classList.remove('is-open');
-      hideSeedEditForm();
-      setTimeout(() => {
-        if (!isSettingsOpen) settingsModal.classList.add('hidden');
-      }, 200);
-    }
-
-    function updateSettingsSeedDisplay() {
-      if (settingsSeedValue) {
-        settingsSeedValue.textContent = currentSeed || '—';
-      }
-    }
-
-    function updateThemeSelectorState() {
-      if (!themeSelector) return;
-      const buttons = themeSelector.querySelectorAll('.settings-toggle-btn');
-      buttons.forEach(btn => {
-        const theme = btn.getAttribute('data-theme');
-        btn.classList.toggle('is-active', theme === themePreference);
-      });
-    }
-
-    function handleThemeSelect(e) {
-      const btn = e.target.closest('.settings-toggle-btn');
-      if (!btn) return;
-      const theme = btn.getAttribute('data-theme');
-      if (!theme) return;
-      themePreference = theme;
-      saveThemePreference(theme);
-      applyThemePreference(themePreference);
-      updateThemeSelectorState();
-    }
-
-    function clearTextSelection() {
-      // 强制清除任何文本选择，防止触发系统智能文本功能
-      if (window.getSelection) {
-        const sel = window.getSelection();
-        if (sel.rangeCount > 0) sel.removeAllRanges();
-      }
-      if (document.activeElement && document.activeElement.blur) {
-        document.activeElement.blur();
-      }
-    }
-
-    function handleCopySeedFromSettings() {
-      if (!currentSeed) return;
-      clearTextSelection();
-      copyTextToClipboard(currentSeed).then(ok => {
-        if (!ok) return;
-        if (copySeedSettings) {
-          copySeedSettings.classList.add('is-copied');
-          setTimeout(() => copySeedSettings.classList.remove('is-copied'), 800);
-        }
-        showToast('种子已复制至剪切板');
-      });
-    }
-
-    function showSeedEditForm() {
-      if (!seedEditInput || !settingsSeedValue) return;
-      // Hide the display value, show the input
-      settingsSeedValue.classList.add('hidden');
-      seedEditInput.classList.remove('hidden');
-      seedEditInput.value = currentSeed || '';
-      // Swap action buttons
-      if (seedActionsNormal) seedActionsNormal.classList.add('hidden');
-      if (seedActionsEdit) seedActionsEdit.classList.remove('hidden');
-      requestAnimationFrame(() => {
-        seedEditInput.focus();
-        seedEditInput.select();
-      });
-    }
-
-    function hideSeedEditForm() {
-      if (!seedEditInput || !settingsSeedValue) return;
-      // Show the display value, hide the input
-      settingsSeedValue.classList.remove('hidden');
-      seedEditInput.classList.add('hidden');
-      seedEditInput.value = '';
-      // Swap action buttons back
-      if (seedActionsNormal) seedActionsNormal.classList.remove('hidden');
-      if (seedActionsEdit) seedActionsEdit.classList.add('hidden');
-    }
-
-    function confirmSeedEdit() {
-      if (!seedEditInput) return;
-      const newSeed = normalizeSeedInput(seedEditInput.value);
-      hideSeedEditForm();
-      closeSettings();
-      seedForNextGame = newSeed;
-      startGameAnimated();
     }
 
     function move(vector) {
@@ -2561,7 +1787,6 @@
         best = score;
         bestEl.textContent = best;
         saveBestBySize();
-        isNewRecord = true;
       }
     }
 
@@ -2596,14 +1821,6 @@
         overlayHideTimer = null;
       }
       overlayText.textContent = text;
-      // Populate game over stats
-      if (finalScoreEl) finalScoreEl.textContent = score.toLocaleString();
-      if (finalTimeEl) finalTimeEl.textContent = formatSeconds(elapsedSeconds);
-      if (finalSizeEl) finalSizeEl.textContent = `${gridSize}×${gridSize}`;
-      // Show/hide new record badge
-      if (newRecordBadge) {
-        newRecordBadge.classList.toggle('hidden', !isNewRecord);
-      }
       overlay.classList.remove('hidden');
       requestAnimationFrame(() => {
         overlay.classList.add('is-open');
@@ -2692,11 +1909,10 @@
 
       const currentTileIds = new Set();
       const mergeAnimations = animations.filter(a => a.merged);
-      const undoSplitAnimations = animations.filter(a => a.undoSplit);
-      const moveAnimations = animations.filter(a => !a.merged && !a.undoSplit);
+      const moveAnimations = animations.filter(a => !a.merged);
 
       // 处理合并动画（特殊）
-      if (!suppressAnimations && mergeAnimations.length > 0) {
+      if (!suppressAnimations) {
         mergeAnimations.forEach(anim => {
           const tileA = existingTiles.get(anim.tileIdA);
           const tileB = existingTiles.get(anim.tileIdB);
@@ -2716,11 +1932,6 @@
             }, 120);
           }
           
-          // 将源 tile ID 添加到 currentTileIds，防止在清理阶段被提前移除
-          // （它们会在 setTimeout 后被正确移除）
-          if (anim.tileIdA) currentTileIds.add(anim.tileIdA);
-          if (anim.tileIdB) currentTileIds.add(anim.tileIdB);
-          
           // 创建合并后的新 tile
           const newTile = createTileElement(anim.mergedTileId, grid[anim.to.r][anim.to.c], anim.to.r, anim.to.c, metrics);
           const inner = newTile.querySelector('.tile-inner');
@@ -2730,36 +1941,8 @@
         });
       }
 
-      // 处理撤销拆分动画（从合并点飞回到两个原位置）
-      if (!suppressAnimations && undoSplitAnimations.length > 0) {
-        undoSplitAnimations.forEach(anim => {
-          // 找到目标位置的 tile（撤销后应该存在）
-          const tileId = gridTileIds[anim.to.r][anim.to.c];
-          if (!tileId) return;
-          
-          let tile = existingTiles.get(tileId);
-          if (!tile) {
-            // 创建新 tile（从 from 位置开始）
-            tile = createTileElement(tileId, grid[anim.to.r][anim.to.c], anim.from.r, anim.from.c, metrics);
-            tilesEl.appendChild(tile);
-            // 下一帧移动到目标位置
-            requestAnimationFrame(() => {
-              updateTilePosition(tile, anim.to.r, anim.to.c);
-              const inner = tile.querySelector('.tile-inner');
-              if (inner) inner.classList.add('tile-undo-split');
-            });
-          } else {
-            // 移动到目标位置
-            updateTilePosition(tile, anim.to.r, anim.to.c);
-            const inner = tile.querySelector('.tile-inner');
-            if (inner) inner.classList.add('tile-undo-split');
-          }
-          currentTileIds.add(tileId);
-        });
-      }
-
       // 处理普通移动
-      if (!suppressAnimations && moveAnimations.length > 0) {
+      if (!suppressAnimations) {
         moveAnimations.forEach(anim => {
           const tile = existingTiles.get(anim.tileId);
           if (tile) {
@@ -2769,7 +1952,7 @@
         });
       }
 
-      // 遍历当前 grid，处理所有 tile（没有动画时或补充遗漏的）
+      // 遍历当前 grid，处理所有 tile
       for (let r = 0; r < gridSize; r++) {
         for (let c = 0; c < gridSize; c++) {
           const value = grid[r][c];
@@ -2778,7 +1961,7 @@
           const tileId = gridTileIds[r][c];
           if (!tileId) continue;
 
-          // 如果已经在动画中处理过，跳过
+          // 如果已经在合并或移动动画中处理过，跳过
           if (currentTileIds.has(tileId)) continue;
 
           let tile = existingTiles.get(tileId);
@@ -2804,6 +1987,65 @@
       });
     }
 
+    // 旧的 render 函数保留用于撤销动画（暂时）
+    function renderLegacy(prevGrid = null, suppressAnimations = false) {
+      isAnimating = true;
+      tilesEl.innerHTML = '';
+      const usedAnimations = [];
+      const metrics = getMetrics();
+
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          const value = grid[r][c];
+          if (!value) continue;
+
+          const animIndex = suppressAnimations
+            ? -1
+            : animations.findIndex(a => a.to.r === r && a.to.c === c && !usedAnimations.includes(a));
+          const anim = animIndex > -1 ? animations[animIndex] : null;
+          if (anim) usedAnimations.push(anim);
+
+          const tile = document.createElement('div');
+          tile.className = 'tile';
+          tile.style.width = `${metrics.size}px`;
+          tile.style.height = `${metrics.size}px`;
+
+          const inner = document.createElement('div');
+          inner.className = 'tile-inner';
+          inner.style.backgroundColor = tileColors(value).bg;
+          inner.style.color = tileColors(value).fg;
+          if (value > 512) inner.classList.add('tile-tiny');
+          else if (value > 64) inner.classList.add('tile-small');
+
+          const startPos = anim ? translate(anim.from.c, anim.from.r) : translate(c, r);
+          const endPos = translate(c, r);
+          tile.style.setProperty('--tx', `${startPos.x}px`);
+          tile.style.setProperty('--ty', `${startPos.y}px`);
+          inner.textContent = value;
+
+          const isNew = !suppressAnimations && lastAdded && lastAdded.r === r && lastAdded.c === c;
+          if (isNew) inner.classList.add('tile-new');
+          if (!suppressAnimations && anim?.merged) inner.classList.add('tile-merged');
+          if (!suppressAnimations && anim?.undoSplit) inner.classList.add('tile-undo-split');
+
+          tile.appendChild(inner);
+          tilesEl.appendChild(tile);
+          requestAnimationFrame(() => {
+            tile.style.setProperty('--tx', `${endPos.x}px`);
+            tile.style.setProperty('--ty', `${endPos.y}px`);
+          });
+        }
+      }
+      if (suppressAnimations) {
+        isAnimating = false;
+        flushBufferedMove();
+        return;
+      }
+      setTimeout(() => {
+        isAnimating = false;
+        flushBufferedMove();
+      }, TILE_ANIMATION_LOCK_MS);
+    }
 
     // 主渲染入口：使用增量更新
     function render(prevGrid = null, suppressAnimations = false) {
@@ -2828,7 +2070,7 @@
     }
 
     function undoMove() {
-      if (!undoStack.length || isHistoryOpen) return;
+      if (!undoStack.length || isAnimating || isHistoryOpen) return;
       const snapshot = undoStack.shift();
       if (!snapshot || snapshot.gridSize !== gridSize) {
         clearUndoHistory();
@@ -2837,11 +2079,43 @@
       const currentGrid = cloneGrid(grid);
       stopTimer();
 
-      // 恢复状态
-      grid = cloneGrid(snapshot.grid);
-      if (snapshot.gridTileIds) {
-        gridTileIds = snapshot.gridTileIds.map(row => [...row]);
+      // 旧版本撤销记录可能没有 vector，降级为无动画直接回退
+      if (!snapshot.vector) {
+        grid = cloneGrid(snapshot.grid);
+        hasStarted = snapshot.hasStarted;
+        isPaused = snapshot.isPaused;
+        elapsedSeconds = snapshot.elapsedSeconds;
+        gameStartTime = snapshot.gameStartTime;
+        hasPlayedCurrentGame = snapshot.hasPlayedCurrentGame;
+        if (typeof snapshot.seed === 'string') currentSeed = snapshot.seed;
+        if (typeof snapshot.rngState === 'number') rngState = snapshot.rngState >>> 0 || 1;
+        animations = [];
+        lastAdded = null;
+        hideOverlay();
+        updateScore(snapshot.score, true);
+        setTimeDisplay(elapsedSeconds);
+        updatePauseIcon();
+        updateSizeToggleVisibility();
+        renderSeedBox();
+        render(null, true);
+        if (snapshot.historyRecords) {
+          historyRecords = cloneHistoryRecords(snapshot.historyRecords);
+          saveHistory();
+          renderHistory();
+        }
+        if (hasStarted && !isPaused) {
+          startTimerIfNeeded();
+        }
+        updateUndoAvailability();
+        return;
       }
+
+      // 计算本次撤销的反向动画：移动回退 + 合并拆分 + 新增棋子消失
+      const sim = simulateMoveForUndo(snapshot.grid, snapshot.vector);
+      const added = findAddedTile(currentGrid, sim.grid);
+      prepareUndoFx(added, sim);
+
+      grid = cloneGrid(snapshot.grid);
       hasStarted = snapshot.hasStarted;
       isPaused = snapshot.isPaused;
       elapsedSeconds = snapshot.elapsedSeconds;
@@ -2849,26 +2123,15 @@
       hasPlayedCurrentGame = snapshot.hasPlayedCurrentGame;
       if (typeof snapshot.seed === 'string') currentSeed = snapshot.seed;
       if (typeof snapshot.rngState === 'number') rngState = snapshot.rngState >>> 0 || 1;
-      
-      // 撤销动画（使用 FX 层）
-      if (snapshot.vector) {
-        const sim = simulateMoveForUndo(snapshot.grid, snapshot.vector);
-        const added = findAddedTile(currentGrid, sim.grid);
-        prepareUndoFx(added, sim);
-        animations = buildUndoAnimations(sim);
-      } else {
-        animations = [];
-      }
-      
+      animations = buildUndoAnimations(sim);
       lastAdded = null;
       hideOverlay();
       updateScore(snapshot.score, true);
       setTimeDisplay(elapsedSeconds);
       updatePauseIcon();
       updateSizeToggleVisibility();
-      updateSettingsSeedDisplay();
-      render(null, !snapshot.vector);
-      
+      renderSeedBox();
+      render();
       if (snapshot.historyRecords) {
         historyRecords = cloneHistoryRecords(snapshot.historyRecords);
         saveHistory();
@@ -3087,9 +2350,10 @@
       if (isLandscape) {
         const headerRect = headerEl.getBoundingClientRect();
         const headerWidth = headerRect.width;
+        const themeRect = themeToggle ? themeToggle.getBoundingClientRect() : { width: 0 };
+        const themeWidth = themeRect.width || 0;
         const sizeToggleWidth = sizeToggleEl.getBoundingClientRect().width;
-        const controlsWidth = controlsPanelEl.getBoundingClientRect().width;
-        const leftClusterWidth = Math.max(headerWidth, sizeToggleWidth, controlsWidth) + safeGap * 2;
+        const leftClusterWidth = headerWidth + sizeToggleWidth + safeGap * 2;
         document.documentElement.style.setProperty('--size-toggle-width', `${sizeToggleWidth}px`);
         const landscapeLeft = paddingLeft + safeGap;
         const landscapeTop = paddingTop + Math.max(0, safeGap - 6);
@@ -3097,7 +2361,10 @@
         document.documentElement.style.setProperty('--landscape-top', `${landscapeTop}px`);
         const availableHeight = viewportHeight - paddingTop - paddingBottom;
         const widthForBoard = viewportWidth - paddingLeft - paddingRight;
-        const widthLimitBySide = widthForBoard - 2 * leftClusterWidth;
+        const rightClusterWidth = themeWidth + safeGap;
+        const leftLimit = widthForBoard - 2 * leftClusterWidth;
+        const rightLimit = widthForBoard - 2 * rightClusterWidth;
+        const widthLimitBySide = Math.min(leftLimit, rightLimit);
         finalSize = Math.min(
           420,
           Math.max(0, availableHeight),
@@ -3164,16 +2431,16 @@
         512: { bg: '#edc850', fg: '#f9f6f2' },
         1024: { bg: '#edc53f', fg: '#f9f6f2' },
         2048: { bg: '#edc22e', fg: '#f9f6f2' },
-        4096: { bg: '#a8d5ba', fg: '#3d5a45' },
-        8192: { bg: '#a8c5e0', fg: '#3d4d60' },
-        16384: { bg: '#c5b5e0', fg: '#524865' },
-        32768: { bg: '#e0b5d0', fg: '#604850' },
-        65536: { bg: '#b0d8e0', fg: '#405560' },
-        131072: { bg: '#e8d890', fg: '#605840' },
+        4096: { bg: '#3c3a32', fg: '#f9f6f2' },
+        8192: { bg: '#3b332a', fg: '#f9f6f2' },
+        16384: { bg: '#3a2f26', fg: '#f9f6f2' },
+        32768: { bg: '#392b22', fg: '#f9f6f2' },
+        65536: { bg: '#38271e', fg: '#f9f6f2' },
+        131072: { bg: '#37231a', fg: '#f9f6f2' },
       };
       const darkMap = {
-        2: { bg: '#2d2720', fg: '#e4dbcf' },
-        4: { bg: '#5f4d35', fg: '#e4dbcf' },
+        2: { bg: '#241e19', fg: '#e4dbcf' },
+        4: { bg: '#352c25', fg: '#e4dbcf' },
         8: { bg: '#6c4a33', fg: '#f5eee5' },
         16: { bg: '#7a4731', fg: '#f5eee5' },
         32: { bg: '#8a3f2e', fg: '#f5eee5' },
@@ -3183,12 +2450,12 @@
         512: { bg: '#a76b1d', fg: '#f5eee5' },
         1024: { bg: '#b06f18', fg: '#f5eee5' },
         2048: { bg: '#b87413', fg: '#f5eee5' },
-        4096: { bg: '#2d3b2d', fg: '#d8e4d8' },
-        8192: { bg: '#2a3340', fg: '#d8dee8' },
-        16384: { bg: '#362d3d', fg: '#e0d8e4' },
-        32768: { bg: '#3d2d35', fg: '#e8d8e0' },
-        65536: { bg: '#2d3638', fg: '#d8e0e2' },
-        131072: { bg: '#3d3728', fg: '#e8e4d8' },
+        4096: { bg: '#2a241e', fg: '#f5eee5' },
+        8192: { bg: '#2a2119', fg: '#f5eee5' },
+        16384: { bg: '#291f16', fg: '#f5eee5' },
+        32768: { bg: '#281d13', fg: '#f5eee5' },
+        65536: { bg: '#271b11', fg: '#f5eee5' },
+        131072: { bg: '#26190f', fg: '#f5eee5' },
       };
       const isDark = getEffectiveTheme() === 'dark';
       const map = isDark ? darkMap : lightMap;
@@ -3312,127 +2579,43 @@
     function renderHistory() {
       if (!historyListEl) return;
       if (!historyRecords.length) {
-        historyListEl.innerHTML = '<div style="text-align:center;opacity:0.6;padding:24px 0;">暂无对局</div>';
+        historyListEl.textContent = '暂无对局';
         return;
       }
-      // SVG icons for stats
-      const iconGrid = '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>';
-      const iconTime = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>';
-      const iconScore = '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
-      
       historyListEl.innerHTML = historyRecords
         .map((r, index) => {
           const startLabel = r.startedAt ? formatStartTimeShort(r.startedAt) : '未知时间';
           const seed = typeof r.seed === 'string' ? r.seed : '';
           const fixedSeed = seed ? toFixedSeedString(seed) : '';
-          const seedLabel = fixedSeed ? `${formatSeedForHistory(fixedSeed)}` : '—';
-          // SVG icons for seed actions
-          const iconCopy = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
-          const iconPlay = '<svg viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>';
-          const seedRow = fixedSeed
-            ? `<div class="history-seed-row">
-                <span class="history-seed-label" title="种子: ${escapeHtml(fixedSeed)}">${escapeHtml(seedLabel)}</span>
-                <button class="history-seed-copy pressable" type="button" data-seed="${escapeHtml(fixedSeed)}" title="复制种子" aria-label="复制种子"><span class="history-seed-icon">${iconCopy}</span></button>
-                <button class="history-seed-use pressable" type="button" data-seed="${escapeHtml(fixedSeed)}" data-size="${r.size}" title="使用此种子开始新游戏" aria-label="使用此种子开始新游戏"><span class="history-seed-icon">${iconPlay}</span></button>
-              </div>`
-            : '';
-          
-          return `<div class="history-item" data-index="${index}">
-            <div class="history-item-slider">
-              <div class="history-item-content">
-                <div class="history-header-row">
-                  <span class="history-time" title="${r.startedAt ? escapeHtml(formatStartTime(r.startedAt)) : ''}">${escapeHtml(startLabel)}</span>
-                  <button class="history-delete-inline" data-index="${index}" aria-label="删除这一局记录">✕</button>
-                </div>
-                <div class="history-stats-row">
-                  <span class="history-stat" title="棋盘尺寸">
-                    <span class="history-stat-icon">${iconGrid}</span>
-                    <span class="history-stat-value">${r.size}×${r.size}</span>
-                  </span>
-                  <span class="history-stat" title="游戏时长">
-                    <span class="history-stat-icon">${iconTime}</span>
-                    <span class="history-stat-value">${escapeHtml(formatSeconds(r.seconds))}</span>
-                  </span>
-                  <span class="history-stat" title="最终得分">
-                    <span class="history-stat-icon">${iconScore}</span>
-                    <span class="history-stat-value">${r.score}</span>
-                    <span class="history-stat-label">分</span>
-                  </span>
-                </div>
-                ${seedRow}
-              </div>
-              <button class="history-item-delete" data-index="${index}" aria-label="删除这一局记录">删除</button>
-            </div>
-          </div>`;
+          const metaText = `${startLabel} · ${r.size}×${r.size} · ${formatSeconds(r.seconds)} · ${r.score}分`;
+          const metaTitle = r.startedAt ? `${formatStartTime(r.startedAt)} · ${r.size}×${r.size} · ${formatSeconds(r.seconds)} · ${r.score}分` : metaText;
+          const seedLabel = fixedSeed ? `seed:${formatSeedForHistory(fixedSeed)}` : 'seed:—';
+          const seedNode = fixedSeed
+            ? `<button class="history-seed pressable" type="button" data-seed="${escapeHtml(fixedSeed)}" title="点击复制：${escapeHtml(fixedSeed)}" aria-label="复制种子">${escapeHtml(seedLabel)}</button>`
+            : `<span class="history-seed-missing" title="旧记录无种子">${escapeHtml(seedLabel)}</span>`;
+          return `<div class="history-item"><div class="history-main"><span class="history-meta" title="${escapeHtml(metaTitle)}">${escapeHtml(metaText)}</span>${seedNode}<button class="history-delete" data-index="${index}" aria-label="删除这一局记录">✕</button></div></div>`;
         })
         .join('');
     }
 
     function handleHistoryClick(e) {
-      // Handle copy seed button
-      const copyBtn = e.target && e.target.closest('.history-seed-copy');
-      if (copyBtn) {
-        clearTextSelection();
-        const seed = copyBtn.getAttribute('data-seed') || '';
+      const seedBtn = e.target && e.target.closest('.history-seed');
+      if (seedBtn) {
+        const seed = seedBtn.getAttribute('data-seed') || '';
         copyTextToClipboard(seed).then(ok => {
           if (!ok) return;
-          flashCopied(copyBtn);
+          flashCopied(seedBtn);
           showToast('种子已复制至剪切板');
         });
         return;
       }
-      // Handle use seed button
-      const useBtn = e.target && e.target.closest('.history-seed-use');
-      if (useBtn) {
-        clearTextSelection();
-        const seed = useBtn.getAttribute('data-seed') || '';
-        const size = Number(useBtn.getAttribute('data-size')) || gridSize;
-        if (!seed) return;
-        // Flash button to indicate action
-        useBtn.classList.add('is-active');
-        setTimeout(() => useBtn.classList.remove('is-active'), 200);
-        // Finish current game if in progress
-        if (gameStartTime) {
-          finishTimerAndRecord();
-        }
-        // Change grid size if different
-        if (size !== gridSize) {
-          gridSize = size;
-          sizeIndex = sizes.indexOf(size);
-          if (sizeIndex < 0) sizeIndex = sizes.indexOf(4); // fallback to 4x4
-          document.documentElement.style.setProperty('--grid-size', gridSize);
-          sizeLabel.textContent = `${gridSize}×${gridSize}`;
-          best = bestBySize[String(gridSize)] || 0;
-          bestEl.textContent = best;
-          buildGrid();
-        }
-        // Close history modal and start new game with seed
-        closeHistory();
-        seedForNextGame = seed;
-        startGameAnimated();
-        showToast('使用历史种子开始新游戏');
-        return;
-      }
-      // Handle delete button (both swipe and inline)
-      const btn = e.target && (e.target.closest('.history-item-delete') || e.target.closest('.history-delete-inline'));
+      const btn = e.target && e.target.closest('.history-delete');
       if (!btn) return;
       const idx = Number(btn.getAttribute('data-index'));
       if (Number.isNaN(idx) || idx < 0 || idx >= historyRecords.length) return;
-      const item = btn.closest('.history-item');
-      if (item) {
-        item.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-        item.style.opacity = '0';
-        item.style.transform = 'translateX(-100%)';
-        setTimeout(() => {
-          historyRecords.splice(idx, 1);
-          saveHistory();
-          renderHistory();
-        }, 200);
-      } else {
-        historyRecords.splice(idx, 1);
-        saveHistory();
-        renderHistory();
-      }
+      historyRecords.splice(idx, 1);
+      saveHistory();
+      renderHistory();
     }
 
     function setupHistorySwipe() {
@@ -3447,20 +2630,12 @@
       if (e.touches.length !== 1) return;
       const item = e.target.closest('.history-item');
       if (!item) return;
-      // Close any other open items first
-      const openItems = historyListEl.querySelectorAll('.history-item.show-delete');
-      openItems.forEach(el => {
-        if (el !== item) el.classList.remove('show-delete');
-      });
       const t = e.touches[0];
-      const slider = item.querySelector('.history-item-slider');
       historySwipeState.item = item;
-      historySwipeState.slider = slider;
       historySwipeState.startX = t.clientX;
       historySwipeState.startY = t.clientY;
       historySwipeState.active = true;
       historySwipeState.moved = false;
-      historySwipeState.currentX = item.classList.contains('show-delete') ? -70 : 0;
     }
 
     function handleHistoryTouchMove(e) {
@@ -3470,15 +2645,10 @@
       const dy = t.clientY - historySwipeState.startY;
       if (!historySwipeState.moved && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
         historySwipeState.moved = true;
-        historySwipeState.item.classList.add('is-swiping');
       }
       if (!historySwipeState.moved) return;
       e.preventDefault();
       e.stopPropagation();
-      // Calculate new position with bounds
-      let newX = historySwipeState.currentX + dx;
-      newX = Math.max(-140, Math.min(0, newX)); // Limit: -140 to 0
-      historySwipeState.slider.style.transform = `translateX(${newX}px)`;
     }
 
     function handleHistoryTouchEnd(e) {
@@ -3486,44 +2656,22 @@
         historySwipeState.active = false;
         historySwipeState.moved = false;
         historySwipeState.item = null;
-        historySwipeState.slider = null;
         return;
       }
-      const item = historySwipeState.item;
-      const slider = historySwipeState.slider;
-      item.classList.remove('is-swiping');
-      slider.style.transform = '';
       const t = e.changedTouches[0];
       const dx = t.clientX - historySwipeState.startX;
       const dy = t.clientY - historySwipeState.startY;
-      const finalX = historySwipeState.currentX + dx;
-      if (historySwipeState.moved && Math.abs(dx) > Math.abs(dy)) {
-        if (finalX < -100) {
-          // Swiped far enough - trigger delete
-          const idx = Number(item.getAttribute('data-index'));
-          if (!Number.isNaN(idx) && idx >= 0 && idx < historyRecords.length) {
-            item.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-            item.style.opacity = '0';
-            item.style.transform = 'translateX(-100%)';
-            setTimeout(() => {
-              historyRecords.splice(idx, 1);
-              saveHistory();
-              renderHistory();
-            }, 200);
-          }
-        } else if (finalX < -30) {
-          // Show delete button
-          item.classList.add('show-delete');
+      if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) {
+          historySwipeState.item.classList.add('show-delete');
         } else {
-          // Hide delete button
-          item.classList.remove('show-delete');
+          historySwipeState.item.classList.remove('show-delete');
         }
       }
       e.stopPropagation();
       historySwipeState.active = false;
       historySwipeState.moved = false;
       historySwipeState.item = null;
-      historySwipeState.slider = null;
     }
 
     function handleBeforeUnload() {

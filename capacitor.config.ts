@@ -1,12 +1,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.game2048',
+  appId: 'com.qilinqian.game2048',
   appName: '2048',
   webDir: 'capacitor-2048/web',
   backgroundColor: '#faf8ef',
   ios: {
-    contentInset: 'always'
+    contentInset: 'never'
   },
   android: {
     backgroundColor: '#faf8ef',

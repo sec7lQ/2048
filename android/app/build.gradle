@@ -19,7 +19,7 @@ def getSigningProp = { String key ->
 }
 
 android {
-    namespace = "com.game2048"
+    namespace = "com.qilinqian.game2048"
     compileSdk = rootProject.ext.compileSdkVersion
     signingConfigs {
         release {
@@ -33,11 +33,11 @@ android {
         }
     }
     defaultConfig {
-        applicationId "com.game2048"
+        applicationId "com.qilinqian.game2048"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "1.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -54,6 +54,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+        }
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "2048-${variant.name}.apk"
         }
     }
 }

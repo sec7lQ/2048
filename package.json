@@ -1,6 +1,6 @@
 {
   "name": "2048-capacitor",
-  "version": "1.0.0",
+  "version": "1.1",
   "description": "2048 game - Capacitor mobile app",
   "author": "7lq",
   "license": "MIT",
@@ -17,10 +17,14 @@
   "dependencies": {
     "@capacitor/android": "^8.0.0",
     "@capacitor/cli": "^8.0.0",
+    "@capacitor/clipboard": "^8.0.0",
     "@capacitor/core": "^8.0.0",
     "@capacitor/ios": "^8.0.0"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   }
 }
