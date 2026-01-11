@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-## [1.1] - 2026-01-11
+## [v1.1] - 2026-01-11
 
 ### Added
 - Undo feature to prevent accidental moves, allows undoing the last three operations
@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-## [1.0.0] - 2026-01-07
+## [v1.0.0] - 2026-01-07
 
 ### Added
 - Initial release
